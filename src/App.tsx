@@ -1,145 +1,97 @@
 import { Button } from "./components/ui/button";
-import { Github, FileVideo, Upload, Wand2 } from "lucide-react";
+import { Github, Wand2 } from "lucide-react";
 import { Separator } from "./components/ui/separator";
 import { Textarea } from "./components/ui/textarea";
-import { Label } from "./components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./components/ui/select";
-import { Slider } from "./components/ui/slider";
+import { VideoInputForm } from "./components/video-input-form";
+import { PromptSelect } from "./components/prompt-select";
+import { ModelSelect } from "./components/model-select";
+import { TemperatureSlider } from "./components/temperature-slider";
+import { useState } from "react";
+import { useCompletion } from 'ai/react'
 
-export const App = () =>
-(
-  <div className="min-h-screen flex flex-col">
-    <div className="px-6 py-3 flex items-center justify-between border-b">
-      <h1 className="text-xl font-bold">upload.ai</h1>
+export const App = () => {
+  const [temperature, setTemperature] = useState<number>(0.5)
+  const [videoId, setVideoId] = useState<string | null>(null)
 
-      <div className="flex items-center gap-3">
-        <span className="text-sm text-muted-foreground">
-          Desenvolvido com ❤ no NLW
-        </span>
 
-        <Separator orientation="vertical" className="h-6" />
+  const { input, setInput, handleInputChange, handleSubmit, completion, isLoading } = useCompletion({
+    api: 'http://localhost:3333/ai/complete',
+    body: {
+      videoId, temperature,
+    },
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  })
 
-        <Button variant="outline">
-          <Github className="w-4 h-4 mr-2" />
-          Github
-        </Button>
-      </div>
-    </div>
+  const handlePromptSelected = (template: string) => setInput(template)
+  const handleTemperature = (temperature: number) => setTemperature(temperature)
+  const handleVideoId = (videoId: string) => setVideoId(videoId)
 
-    <main className="flex-1 p-6 flex gap-6">
-      <div className="flex flex-col flex-1 gap-4">
-        <div className="grid grid-rows-2 gap-4 flex-1">
-          <Textarea
-            placeholder="Inclua o prompt para a IA..."
-            className="resize-none p-4 leading-relaxed"
-          />
-          <Textarea
-            placeholder="Resultado gerado pela IA..."
-            readOnly
-            className="resize-none p-4 leading-relaxed"
-          />
+  return (
+    <div className="min-h-screen flex flex-col">
+      <div className="px-6 py-3 flex items-center justify-between border-b">
+        <h1 className="text-xl font-bold">upload.ai</h1>
+
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-muted-foreground">
+            Desenvolvido com ❤ no NLW
+          </span>
+
+          <Separator orientation="vertical" className="h-6" />
+
+          <Button variant="outline">
+            <Github className="w-4 h-4 mr-2" />
+            Github
+          </Button>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Lembre-se: você pode utilizar a variável&nbsp;
-          <code className="text-violet-400">{"{transcription}"}</code> no seu
-          prompt para adicionar o conteúdo da descrição do vídeo selecionado.
-        </p>
       </div>
 
-      <aside className="w-80 space-y-6">
-        <form className="space-y-6">
-          <label
-            htmlFor="video"
-            className="border flex w-full rounded-md aspect-video cursor-pointer border-dashed text-sm flex-col gap-2 items-center justify-center text-muted-foreground hover:bg-primary/5"
-          >
-            <FileVideo className="w-4 h-4" />
-            Selecione um vídeo
-          </label>
-
-          <input
-            type="file"
-            id="video"
-            accept="video/mp4"
-            className="sr-only"
-          />
-
-          <Separator />
-
-          <div className="space-y-2">
-            <Label htmlFor="transcription_prompt">
-              Prompt de transcrição
-            </Label>
+      <main className="flex-1 p-6 flex gap-6">
+        <div className="flex flex-col flex-1 gap-4">
+          <div className="grid grid-rows-2 gap-4 flex-1">
             <Textarea
-              id="transcription_prompt"
-              className="h-20 leading-relaxed"
-              placeholder="Inclua palavras-chave mencionadas no vídeo separadas por vírgula (,)"
+              placeholder="Inclua o prompt para a IA..."
+              className="resize-none p-4 leading-relaxed"
+              value={input}
+              onChange={handleInputChange}
+            />
+            <Textarea
+              placeholder="Resultado gerado pela IA..."
+              readOnly
+              className="resize-none p-4 leading-relaxed"
+              value={completion}
             />
           </div>
+          <p className="text-sm text-muted-foreground">
+            Lembre-se: você pode utilizar a variável&nbsp;
+            <code className="text-violet-400">{"{transcription}"}</code> no seu
+            prompt para adicionar o conteúdo da descrição do vídeo selecionado.
+          </p>
+        </div>
 
-          <Button type="submit" className="w-full">
-            Carregar vídeo
-            <Upload className="w-4 h-4 ml-2" />
-          </Button>
-        </form>
-
-        <Separator />
-
-        <form className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="model">Modelo</Label>
-            <Select disabled defaultValue="gpt-3.5">
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="gpt-3.5">GPT 3.5-turbo 16k</SelectItem>
-              </SelectContent>
-            </Select>
-            <span className="block text-xs text-muted-foreground italic">
-              Você poderá customizar esta opção em breve
-            </span>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="prompt">Prompt</Label>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um prompt..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="title">Título do YouTube</SelectItem>
-                <SelectItem value="description">
-                  Descrição do YouTube
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <aside className="w-80 space-y-6">
+          <VideoInputForm onVideoUploaded={handleVideoId} />
 
           <Separator />
 
-          <div className="space-y-4">
-            <Label htmlFor="temperature">Temperatura</Label>
-            <Slider min={0} max={1} step={0.1} />
-            <span className="block text-xs text-muted-foreground italic leading-relaxed">
-              Valores mais altos tendem a deixar o resultado mais criativo e
-              com possíveis erros.
-            </span>
-          </div>
+          <form className="space-y-6" onSubmit={handleSubmit}>
+            <PromptSelect onPromptSelected={handlePromptSelected} />
+            <ModelSelect />
 
-          <Separator />
+            <Separator />
 
-          <Button type="submit" className="w-full">
-            Executar
-            <Wand2 className="w-4 h-4 ml-2" />
-          </Button>
-        </form>
-      </aside>
-    </main>
-  </div>
-);
+            <TemperatureSlider temperature={temperature} onValueChange={handleTemperature} />
+
+            <Separator />
+
+            <Button disabled={isLoading} type="submit" className="w-full">
+              Executar
+              <Wand2 className="w-4 h-4 ml-2" />
+            </Button>
+          </form>
+        </aside>
+      </main>
+    </div>
+  )
+};
